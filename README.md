@@ -9,3 +9,5 @@ This is an open source LA-2A style compressor VST3 plugin. Feel free to contribu
 
 ## Supported Oporating Systems
 - linux
+- macos
+

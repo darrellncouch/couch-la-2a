@@ -1,3 +1,0 @@
-repository='https://github.com/juce-framework/JUCE.git'
-module=''
-tag='origin'
