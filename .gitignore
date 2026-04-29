@@ -1,0 +1,25 @@
+# Build output
+build/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE / editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Compiled objects
+*.o
+*.a
+*.so
+*.dylib
+
+# VST3 / plugin artefacts
+*.vst3
+*.component
+*.app

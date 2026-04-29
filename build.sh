@@ -12,24 +12,34 @@ BUILD_DIR="$SCRIPT_DIR/build"
 
 install_deps() {
     echo "→ Installing system dependencies..."
-    sudo apt-get update
-    sudo apt-get install -y \
-        build-essential \
-        cmake \
-        git \
-        libasound2-dev \
-        libx11-dev \
-        libxext-dev \
-        libxinerama-dev \
-        libxrandr-dev \
-        libxcursor-dev \
-        libxrender-dev \
-        libfreetype6-dev \
-        libfontconfig1-dev \
-        libgl1-mesa-dev \
-        libglu1-mesa-dev \
-        pkg-config
-    echo "✓ Dependencies installed."
+    if [[ "$(uname)" == "Darwin" ]]; then
+        if ! command -v brew &>/dev/null; then
+            echo "ERROR: Homebrew not found. Install it from https://brew.sh"
+            exit 1
+        fi
+        brew install cmake pkg-config
+        echo "✓ Dependencies installed (Xcode Command Line Tools provide the rest)."
+        echo "  If you haven't already, run: xcode-select --install"
+    else
+        sudo apt-get update
+        sudo apt-get install -y \
+            build-essential \
+            cmake \
+            git \
+            libasound2-dev \
+            libx11-dev \
+            libxext-dev \
+            libxinerama-dev \
+            libxrandr-dev \
+            libxcursor-dev \
+            libxrender-dev \
+            libfreetype6-dev \
+            libfontconfig1-dev \
+            libgl1-mesa-dev \
+            libglu1-mesa-dev \
+            pkg-config
+        echo "✓ Dependencies installed."
+    fi
 }
 
 clean_build() {
@@ -55,7 +65,8 @@ build() {
           -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
     echo "→ Building (will reuse JUCE cache if already downloaded)..."
-    cmake --build "$BUILD_DIR" --config Release --parallel "$(nproc)"
+    JOBS=$(nproc 2>/dev/null || sysctl -n hw.logicalcpu)
+    cmake --build "$BUILD_DIR" --config Release --parallel "$JOBS"
 
     echo ""
     echo "─────────────────────────────────────────────────────"
