@@ -6,3 +6,8 @@ This is an open source LA-2A style compressor VST3 plugin. Feel free to contribu
 ## Build
 - ./build.sh deps
 - ./build.sh
+
+
+## Supported Oporating Systems
+- linux
+- macos
