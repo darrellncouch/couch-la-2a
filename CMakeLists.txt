@@ -34,6 +34,15 @@ juce_add_plugin(CouchLA2A
 
 juce_generate_juce_header(CouchLA2A)
 
+# ── Binary data (images embedded directly in the binary) ─────────────────────
+juce_add_binary_data(CouchLA2A_BinaryData SOURCES
+    Resources/knob_filmstrip.png
+    Resources/panel_metal.png
+    Resources/toggle_up.png
+    Resources/toggle_down.png
+    Resources/window.png
+)
+
 # ── Sources ───────────────────────────────────────────────────────────────────
 target_sources(CouchLA2A PRIVATE
     Source/PluginProcessor.cpp
@@ -55,6 +64,7 @@ target_compile_definitions(CouchLA2A PUBLIC
 # ── Link libraries ────────────────────────────────────────────────────────────
 target_link_libraries(CouchLA2A
     PRIVATE
+        CouchLA2A_BinaryData
         juce::juce_audio_utils
         juce::juce_dsp
     PUBLIC

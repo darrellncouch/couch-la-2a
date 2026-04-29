@@ -33,6 +33,7 @@ private:
 
     // ── Draw helpers ──────────────────────────────────────────────────────
     void drawPanel         (juce::Graphics&) const;
+    void drawRackScrews    (juce::Graphics&) const;
     void drawKnobScale     (juce::Graphics&, float cx, float cy,
                             float innerR, float outerR, float labelR) const;
     void drawKnobLabels    (juce::Graphics&) const;
@@ -66,33 +67,33 @@ private:
     float needleVelocity = 0.f;
 
     // ── Layout constants ──────────────────────────────────────────────────
-    static constexpr int PLUGIN_W = 700;
-    static constexpr int PLUGIN_H = 210;
+    static constexpr int PLUGIN_W = 800;
+    static constexpr int PLUGIN_H = 240;
+    static constexpr int EAR_W    = 28;
 
-    // LIMIT / COMPRESS switch buttons (left side)
     static constexpr int SW_X = 14,  SW_W = 62, SW_H = 24;
-    static constexpr int SW_LIMIT_Y   = 58;
-    static constexpr int SW_COMPRESS_Y = 86;
+    static constexpr int SW_LIMIT_Y   = 65;
+    static constexpr int SW_COMPRESS_Y = 93;
 
-    // GAIN knob (large, left-center)
-    static constexpr int GAIN_X = 88,  GAIN_Y = 38, GAIN_W = 130, GAIN_H = 130;
+    static constexpr int GAIN_X = 88,  GAIN_Y = 45, GAIN_W = 140, GAIN_H = 140;
 
-    // VU meter face (center)
-    static constexpr int   VM_X = 238, VM_Y = 15, VM_W = 224, VM_H = 152;
-    static constexpr float VM_PX = VM_X + VM_W * 0.5f;  // = 350
-    static constexpr float VM_PY = VM_Y + VM_H - 4.f;   // = 163
+    // VU meter face
+    static constexpr int   VM_X = 278, VM_Y = 18, VM_W = 220, VM_H = 165;
+    // Inner opening of the window bezel (inset ~18px each side at plugin scale)
+    static constexpr int   VM_INSET = 18;
+    static constexpr float VM_PX = VM_X + VM_W * 0.5f;
+    // Pivot sits at the inner bottom edge of the window so the needle emerges from inside
+    static constexpr float VM_PY = VM_Y + VM_H - VM_INSET;
 
-    // VU needle radii
-    static constexpr float NEEDLE_R    = 68.f;
-    static constexpr float SCALE_R_OUT = 62.f;
-    static constexpr float SCALE_R_IN  = 52.f;
-    static constexpr float LABEL_R     = 42.f;
+    // Radii sized to fit within the inner opening (inner half-width ~92px)
+    static constexpr float NEEDLE_R    = 100.f;
+    static constexpr float SCALE_R_OUT =  92.f;
+    static constexpr float SCALE_R_IN  =  80.f;
+    static constexpr float LABEL_R     =  67.f;
 
-    // PEAK REDUCTION knob (large, right-center)
-    static constexpr int PR_X = 482,  PR_Y = 38, PR_W = 130, PR_H = 130;
+    static constexpr int PR_X = 548,  PR_Y = 45, PR_W = 140, PR_H = 140;
 
-    // Bottom area
-    static constexpr int BOT_Y = 175;
+    static constexpr int BOT_Y = 200;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CouchLA2AEditor)
 };
