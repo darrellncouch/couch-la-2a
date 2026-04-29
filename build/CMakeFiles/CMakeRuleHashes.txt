@@ -1,3 +1,0 @@
-# Hashes of file build rules.
-dae142f7024f144f1e9d336a0a30cb63 CouchLA2A_artefacts/JuceLibraryCode/JuceHeader.h
-24dbc87f04e17f4916ee7556b12810ab juce_binarydata_CouchLA2A_BinaryData/JuceLibraryCode/BinaryData1.cpp
