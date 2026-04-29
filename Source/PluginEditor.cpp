@@ -184,6 +184,11 @@ juce::Rectangle<float> CouchLA2AEditor::getCompressBtnBounds() const noexcept
     return { (float) SW_X - 14.f, (float) SW_COMPRESS_Y, (float) SW_W + 14.f, (float) SW_H };
 }
 
+juce::Rectangle<float> CouchLA2AEditor::getPowerBtnBounds() const noexcept
+{
+    return { (float) PWR_CX - 44.f, (float) PWR_CY - 36.f, 88.f, 72.f };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Mouse
 // ─────────────────────────────────────────────────────────────────────────────
@@ -207,6 +212,13 @@ void CouchLA2AEditor::mouseDown (const juce::MouseEvent& e)
         repaint();
         return;
     }
+
+    if (getPowerBtnBounds().contains (pt))
+    {
+        powerOn = !powerOn;
+        repaint();
+        return;
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -220,18 +232,18 @@ void CouchLA2AEditor::paint (juce::Graphics& g)
     drawKnobScale (g,
         GAIN_X + GAIN_W * 0.5f, GAIN_Y + GAIN_H * 0.5f,
         GAIN_W * 0.5f,
-        GAIN_W * 0.5f + 12.f,
-        GAIN_W * 0.5f + 22.f);
+        GAIN_W * 0.5f + 5.f,
+        GAIN_W * 0.5f + 14.f);
     drawKnobScale (g,
         PR_X + PR_W * 0.5f, PR_Y + PR_H * 0.5f,
         PR_W * 0.5f,
-        PR_W * 0.5f + 12.f,
-        PR_W * 0.5f + 22.f);
+        PR_W * 0.5f + 5.f,
+        PR_W * 0.5f + 14.f);
     drawKnobLabels  (g);
     drawModeSwitch  (g);
     drawVUMeterFace (g);
     drawVUNeedle    (g);
-    drawPowerLED    (g);
+    drawPowerSwitch (g);
     drawRackScrews  (g);
 }
 
@@ -241,30 +253,15 @@ void CouchLA2AEditor::paint (juce::Graphics& g)
 
 void CouchLA2AEditor::drawPanel (juce::Graphics& g) const
 {
-    // ── Metal texture background ──────────────────────────────────────────
-    static juce::Image metalTex = juce::ImageCache::getFromMemory (
-        BinaryData::panel_metal_png, BinaryData::panel_metal_pngSize);
+    // ── Flat silver/gray panel ────────────────────────────────────────────
+    g.setColour (juce::Colour (0xffc4c4c0));
+    g.fillAll();
 
-    if (metalTex.isValid())
-    {
-        // Draw texture stretched to full plugin size
-        g.drawImage (metalTex, 0, 0, PLUGIN_W, PLUGIN_H,
-                     0, 0, metalTex.getWidth(), metalTex.getHeight());
-
-        // Subtle darkening overlay toward edges (vignette)
-        juce::ColourGradient vig (juce::Colours::transparentBlack, PLUGIN_W * 0.5f, PLUGIN_H * 0.4f,
-                                  juce::Colour (0x28000000), 0.f, (float) PLUGIN_H, true);
-        g.setGradientFill (vig);
-        g.fillAll();
-    }
-    else
-    {
-        // Fallback plain gradient
-        juce::ColourGradient pg (Col::panelLight, 0.f, 0.f,
-                                 Col::panelDark,  0.f, (float) PLUGIN_H, false);
-        g.setGradientFill (pg);
-        g.fillAll();
-    }
+    // Subtle top-to-bottom shading for slight depth
+    juce::ColourGradient pg (juce::Colour (0xffd0d0cc), 0.f, 0.f,
+                             juce::Colour (0xffb8b8b4), 0.f, (float) PLUGIN_H, false);
+    g.setGradientFill (pg);
+    g.fillRect (EAR_W, 0, PLUGIN_W - EAR_W * 2, PLUGIN_H);
 
     // ── Dark rack ears (left and right) ───────────────────────────────────
     for (int side = 0; side < 2; ++side)
@@ -299,14 +296,6 @@ void CouchLA2AEditor::drawPanel (juce::Graphics& g) const
     g.drawHorizontalLine (PLUGIN_H - 1, (float) EAR_W, (float)(PLUGIN_W - EAR_W));
     g.setColour (juce::Colours::white.withAlpha (0.30f));
     g.drawHorizontalLine (1,            (float) EAR_W, (float)(PLUGIN_W - EAR_W));
-
-    // ── Bottom darker strip ───────────────────────────────────────────────
-    juce::ColourGradient bot (juce::Colours::transparentBlack, 0.f, (float) BOT_Y,
-                              juce::Colour (0x22000000), 0.f, (float) PLUGIN_H, false);
-    g.setGradientFill (bot);
-    g.fillRect (EAR_W, BOT_Y, PLUGIN_W - EAR_W * 2, PLUGIN_H - BOT_Y);
-    g.setColour (juce::Colour (0x60404038));
-    g.drawHorizontalLine (BOT_Y, (float) EAR_W, (float)(PLUGIN_W - EAR_W));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -384,12 +373,12 @@ void CouchLA2AEditor::drawKnobScale (juce::Graphics& g,
                     cx + sa * outerR,  cy - ca * outerR,
                     major ? 1.8f : 0.9f);
 
-        if (major)
+        if (true)   // label every tick (every 10)
         {
             const int   val = i * 10;
             const float lx  = cx + sa * labelR;
             const float ly  = cy - ca * labelR;
-            g.setFont (juce::Font ("Arial", 9.f, juce::Font::bold));
+            g.setFont (juce::Font ("Arial", 8.f, juce::Font::bold));
             g.setColour (Col::labelDark);
             g.drawText (juce::String (val),
                         juce::Rectangle<float> (lx - 11.f, ly - 7.f, 22.f, 14.f),
@@ -455,7 +444,7 @@ void CouchLA2AEditor::drawModeSwitch (juce::Graphics& g) const
         g.drawText (text, lx, ly, lw, lh, juce::Justification::centred);
     };
 
-    drawLabel ("LIMIT",    tx, ty - 13, tw, 12);
+    drawLabel ("LIMIT",    tx, ty - 8, tw, 12);
     drawLabel ("COMPRESS", tx, ty + th + 2, tw, 12);
 }
 
@@ -490,20 +479,24 @@ void CouchLA2AEditor::drawVUMeterFace (juce::Graphics& g) const
     const float px = VM_PX;
     const float py = VM_PY;
 
-    // Standard VU ticks
+    // Standard VU ticks – more density between -20 and -10, every tick labelled
     struct Tick { float vu; const char* label; bool major; bool redZone; };
     const Tick ticks[] = {
         { -20.f, "-20", true,  false },
+        { -18.f, "-18", false, false },
+        { -16.f, "-16", false, false },
+        { -14.f, "-14", false, false },
+        { -12.f, "-12", false, false },
         { -10.f, "-10", true,  false },
-        {  -7.f, "-7",  false, false },
-        {  -5.f, "-5",  true,  false },
-        {  -3.f, "-3",  false, false },
-        {  -2.f, "-2",  false, false },
-        {  -1.f, "-1",  false, false },
-        {   0.f,  "0",  true,  true  },
-        {   1.f, "+1",  false, true  },
-        {   2.f, "+2",  false, true  },
-        {   3.f, "+3",  true,  true  },
+        {  -7.f,  "-7", false, false },
+        {  -5.f,  "-5", true,  false },
+        {  -3.f,  "-3", false, false },
+        {  -2.f,  "-2", false, false },
+        {  -1.f,  "-1", false, false },
+        {   0.f,   "0", true,  true  },
+        {   1.f,  "+1", false, true  },
+        {   2.f,  "+2", false, true  },
+        {   3.f,  "+3", true,  true  },
     };
 
     // Filled arc band in red zone (0..+3 VU)
@@ -513,8 +506,8 @@ void CouchLA2AEditor::drawVUMeterFace (juce::Graphics& g) const
         const float a1 = juce::MathConstants<float>::pi / 3.f;  // +3 VU
 
         juce::Path redBand;
-        const float rb1 = SCALE_R_IN - 5.f;
-        const float rb2 = SCALE_R_OUT + 1.f;
+        const float rb1 = SCALE_R_IN - 2.f;
+        const float rb2 = SCALE_R_OUT + 2.f;
         const int   nSeg = 24;
         for (int i = 0; i <= nSeg; ++i)
         {
@@ -539,29 +532,32 @@ void CouchLA2AEditor::drawVUMeterFace (juce::Graphics& g) const
     }
 
     // Tick marks and labels
+    // Arc baseline sits at SCALE_R_IN; ticks extend OUTWARD to SCALE_R_OUT (upward on screen).
+    // Labels are placed beyond SCALE_R_OUT, further from the pivot.
     for (const auto& t : ticks)
     {
         const float norm  = (t.vu + 20.f) / 23.f;
         const float angle = juce::MathConstants<float>::pi / 3.f * (2.f * norm - 1.f);
         const float sa    = std::sin (angle);
         const float ca    = std::cos (angle);
-        const float r1    = t.major ? SCALE_R_IN - 5.f : SCALE_R_IN;
+        // Ticks start at the arc baseline (SCALE_R_IN) and extend outward
+        const float tickOuter = t.major ? SCALE_R_OUT + 2.f : SCALE_R_OUT - 3.f;
 
         const juce::Colour inkCol = t.redZone ? Col::meterRed : Col::meterPrint;
 
         g.setColour (inkCol.withAlpha (t.major ? 0.85f : 0.50f));
-        g.drawLine (px + sa * r1,          py - ca * r1,
-                    px + sa * SCALE_R_OUT, py - ca * SCALE_R_OUT,
+        g.drawLine (px + sa * SCALE_R_IN,    py - ca * SCALE_R_IN,
+                    px + sa * tickOuter,     py - ca * tickOuter,
                     t.major ? 1.5f : 0.8f);
 
-        if (t.major)
+        // Label every tick, placed at LABEL_R (outside the arc)
         {
             const float lx = px + sa * LABEL_R;
             const float ly = py - ca * LABEL_R;
-            g.setFont (juce::Font ("Arial", 8.f, juce::Font::bold));
-            g.setColour (inkCol.withAlpha (0.9f));
+            g.setFont (juce::Font ("Arial", t.major ? 8.f : 7.f, juce::Font::bold));
+            g.setColour (inkCol.withAlpha (t.major ? 0.9f : 0.65f));
             g.drawText (t.label,
-                        juce::Rectangle<float> (lx - 12.f, ly - 7.f, 24.f, 14.f),
+                        juce::Rectangle<float> (lx - 13.f, ly - 7.f, 26.f, 14.f),
                         juce::Justification::centred);
         }
     }
@@ -573,8 +569,8 @@ void CouchLA2AEditor::drawVUMeterFace (juce::Graphics& g) const
         {
             const float f  = i / 80.f;
             const float a  = juce::MathConstants<float>::pi / 3.f * (2.f * f - 1.f);
-            const float ax = px + std::sin (a) * SCALE_R_OUT;
-            const float ay = py - std::cos (a) * SCALE_R_OUT;
+            const float ax = px + std::sin (a) * SCALE_R_IN;
+            const float ay = py - std::cos (a) * SCALE_R_IN;
             if (i == 0) arc.startNewSubPath (ax, ay);
             else        arc.lineTo (ax, ay);
         }
@@ -582,37 +578,27 @@ void CouchLA2AEditor::drawVUMeterFace (juce::Graphics& g) const
         g.strokePath (arc, juce::PathStrokeType (0.7f));
     }
 
-    // "VU" text at left and right scale ends
+    // "VU" text below each arc end (same X as arc endpoint, dropped below the arc)
     {
         g.setFont (juce::Font ("Arial", 8.f, juce::Font::bold));
+        // Arc ends at ±π/3; Y at arc end = py - cos(π/3)*SCALE_R_IN = py - 0.5*SCALE_R_IN
+        const float arcEndY = py - std::cos (juce::MathConstants<float>::pi / 3.f) * SCALE_R_IN;
+
         // left VU (−20 end)
-        const float lnorm  = 0.f;
         const float langle = -juce::MathConstants<float>::pi / 3.f;
-        const float lsa    = std::sin (langle);
-        const float lca    = std::cos (langle);
-        const float lvux   = px + lsa * (LABEL_R - 8.f);
-        const float lvuy   = py - lca * (LABEL_R - 8.f);
+        const float lvux   = px + std::sin (langle) * SCALE_R_IN;
         g.setColour (Col::meterPrint.withAlpha (0.55f));
-        g.drawText ("VU", juce::Rectangle<float> (lvux - 10.f, lvuy - 6.f, 20.f, 12.f),
+        g.drawText ("VU", juce::Rectangle<float> (lvux - 10.f, arcEndY + 4.f, 20.f, 12.f),
                     juce::Justification::centred);
+
         // right VU (+3 end)
-        const float rvuAngle = juce::MathConstants<float>::pi / 3.f;
-        const float rvuX = px + std::sin (rvuAngle) * (LABEL_R - 8.f);
-        const float rvuY = py - std::cos (rvuAngle) * (LABEL_R - 8.f);
+        const float rvux = px + std::sin (juce::MathConstants<float>::pi / 3.f) * SCALE_R_IN;
         g.setColour (Col::meterRed.withAlpha (0.65f));
-        g.drawText ("VU", juce::Rectangle<float> (rvuX - 10.f, rvuY - 6.f, 20.f, 12.f),
+        g.drawText ("VU", juce::Rectangle<float> (rvux - 10.f, arcEndY + 4.f, 20.f, 12.f),
                     juce::Justification::centred);
-        juce::ignoreUnused (lnorm);
     }
 
-    // Center text block
-    {
-        g.setFont (juce::Font ("Arial", 7.5f, juce::Font::bold));
-        g.setColour (Col::meterPrint.withAlpha (0.50f));
-        g.drawText ("VU  LEVEL  INDICATOR",
-                    VM_X, (int)(VM_PY + 2.f), VM_W, 10,
-                    juce::Justification::centred);
-    }
+    // Center text block removed
 
     // ── Glass reflection (top half) ───────────────────────────────────────
     {
@@ -691,10 +677,10 @@ void CouchLA2AEditor::drawBranding (juce::Graphics& g) const
                 VM_X + VM_W + 4, 6, PLUGIN_W - EAR_W - (VM_X + VM_W + 4), 13,
                 juce::Justification::centredLeft);
 
-    // "MODEL LA-2A" sub-line
+    // "DC-2A" sub-line
     g.setFont (juce::Font ("Arial", 8.f, juce::Font::plain));
     g.setColour (Col::labelMid.withAlpha (0.65f));
-    g.drawText ("MODEL  LA-2A",
+    g.drawText ("DC-2A",
                 VM_X + VM_W + 4, 18, PLUGIN_W - EAR_W - (VM_X + VM_W + 4), 11,
                 juce::Justification::centredLeft);
 
@@ -715,56 +701,87 @@ void CouchLA2AEditor::drawBranding (juce::Graphics& g) const
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Power LED  — toggle switch style with green jewel
+// Power toggle switch — ON/OFF bat toggle with LED indicator, near bottom-right
 // ─────────────────────────────────────────────────────────────────────────────
 
-void CouchLA2AEditor::drawPowerLED (juce::Graphics& g) const
+void CouchLA2AEditor::drawPowerSwitch (juce::Graphics& g) const
 {
-    const float cx = PLUGIN_W - EAR_W - 22.f;
-    const float cy = PLUGIN_H * 0.50f;
+    const float cx = (float) PWR_CX;
+    const float cy = (float) PWR_CY;
 
-    // "ON" label
-    g.setFont (juce::Font ("Arial", 8.f, juce::Font::bold));
-    g.setColour (Col::labelDark.withAlpha (0.7f));
-    g.drawText ("ON", (int)(cx - 16.f), (int)(cy - 34.f), 32, 12,
-                juce::Justification::centred);
+    static juce::Image togUp   = juce::ImageCache::getFromMemory (
+        BinaryData::toggle_up_png,   BinaryData::toggle_up_pngSize);
+    static juce::Image togDown = juce::ImageCache::getFromMemory (
+        BinaryData::toggle_down_png, BinaryData::toggle_down_pngSize);
 
-    // LED housing
+    const juce::Image& img = powerOn ? togUp : togDown;
+
+    // Toggle image centred at (cx, cy)
+    const float tw = 88.f, th = 72.f;
+    if (img.isValid())
+        g.drawImage (img, (int)(cx - tw * 0.5f), (int)(cy - th * 0.5f), (int) tw, (int) th,
+                     0, 0, img.getWidth(), img.getHeight());
+
+    // Silk-screened labels
+    auto drawLabel = [&] (const juce::String& text, float lx, float ly, float lw, float lh)
     {
-        juce::ColourGradient hg (juce::Colour (0xff383830), cx - 9.f, cy - 8.f,
-                                 juce::Colour (0xff181810), cx + 9.f, cy + 8.f, false);
+        g.setFont (juce::Font ("Arial", 8.5f, juce::Font::bold));
+        g.setColour (juce::Colours::white.withAlpha (0.18f));
+        g.drawText (text, (int)(lx + 1.f), (int)(ly + 1.f), (int) lw, (int) lh,
+                    juce::Justification::centred);
+        g.setColour (Col::labelDark.withAlpha (0.75f));
+        g.drawText (text, (int) lx, (int) ly, (int) lw, (int) lh,
+                    juce::Justification::centred);
+    };
+
+    drawLabel ("ON",  cx - 44.f, cy - th * 0.5f - 14.f, 88.f, 12.f);
+    drawLabel ("OFF", cx - 44.f, cy + th * 0.5f +  2.f, 88.f, 12.f);
+
+    // LED indicator – top-right corner of the silver panel
+    const float lx = (float) LED_CX;
+    const float ly = (float) LED_CY;
+    const float lr = 5.5f;
+
+    // Housing
+    {
+        juce::ColourGradient hg (juce::Colour (0xff383830), lx - lr, ly - lr,
+                                 juce::Colour (0xff181810), lx + lr, ly + lr, false);
         g.setGradientFill (hg);
-        g.fillRoundedRectangle (cx - 9.f, cy - 8.f, 18.f, 16.f, 3.f);
+        g.fillEllipse (lx - lr - 1.f, ly - lr - 1.f, (lr + 1.f) * 2.f, (lr + 1.f) * 2.f);
         g.setColour (juce::Colours::black.withAlpha (0.7f));
-        g.drawRoundedRectangle (cx - 9.f, cy - 8.f, 18.f, 16.f, 3.f, 0.8f);
+        g.drawEllipse (lx - lr - 1.f, ly - lr - 1.f, (lr + 1.f) * 2.f, (lr + 1.f) * 2.f, 0.8f);
     }
 
-    // Glow aura
+    if (powerOn)
     {
-        juce::ColourGradient glow (Col::ledGlow, cx, cy,
-                                   juce::Colours::transparentBlack, cx + 14.f, cy, true);
+        // Glow aura
+        juce::ColourGradient glow (Col::ledGlow, lx, ly,
+                                   juce::Colours::transparentBlack, lx + 12.f, ly, true);
         g.setGradientFill (glow);
-        g.fillEllipse (cx - 14.f, cy - 14.f, 28.f, 28.f);
-    }
+        g.fillEllipse (lx - 12.f, ly - 12.f, 24.f, 24.f);
 
-    // LED jewel
-    {
-        const float lr = 6.f;
-        juce::ColourGradient lg (Col::ledGreen.brighter (0.3f), cx - lr * 0.35f, cy - lr * 0.4f,
-                                 Col::ledGreen.darker  (0.4f), cx + lr,         cy + lr,       false);
+        // Green jewel
+        juce::ColourGradient lg (Col::ledGreen.brighter (0.3f), lx - lr * 0.35f, ly - lr * 0.4f,
+                                 Col::ledGreen.darker  (0.4f), lx + lr,          ly + lr,       false);
         g.setGradientFill (lg);
-        g.fillEllipse (cx - lr, cy - lr, lr * 2.f, lr * 2.f);
-        g.setColour (juce::Colours::black.withAlpha (0.4f));
-        g.drawEllipse (cx - lr, cy - lr, lr * 2.f, lr * 2.f, 0.8f);
-
-        // Specular
+        g.fillEllipse (lx - lr, ly - lr, lr * 2.f, lr * 2.f);
         g.setColour (juce::Colours::white.withAlpha (0.55f));
-        g.fillEllipse (cx - lr * 0.42f, cy - lr * 0.52f, lr * 0.5f, lr * 0.38f);
+        g.fillEllipse (lx - lr * 0.42f, ly - lr * 0.52f, lr * 0.5f, lr * 0.38f);
+    }
+    else
+    {
+        // Dark / off jewel
+        g.setColour (juce::Colour (0xff303030));
+        g.fillEllipse (lx - lr, ly - lr, lr * 2.f, lr * 2.f);
     }
 
-    // "POWER" label below
+    g.setColour (juce::Colours::black.withAlpha (0.4f));
+    g.drawEllipse (lx - lr, ly - lr, lr * 2.f, lr * 2.f, 0.8f);
+
+    // "POWER" label below the whole section
     g.setFont (juce::Font ("Arial", 7.5f, juce::Font::plain));
     g.setColour (Col::labelMid.withAlpha (0.55f));
-    g.drawText ("POWER", (int)(cx - 18.f), (int)(cy + 11.f), 36, 10,
+    g.drawText ("POWER",
+                (int)(cx - 30.f), (int)(cy + th * 0.5f + 16.f), 60, 10,
                 juce::Justification::centred);
 }

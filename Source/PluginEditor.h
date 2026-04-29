@@ -41,7 +41,7 @@ private:
     void drawVUMeterFace   (juce::Graphics&) const;
     void drawVUNeedle      (juce::Graphics&) const;
     void drawBranding      (juce::Graphics&) const;
-    void drawPowerLED      (juce::Graphics&) const;
+    void drawPowerSwitch   (juce::Graphics&) const;
 
     // ── VU needle angle (clock-face convention, ±60° from 12 o'clock) ────
     // VU scale: −20 VU (full left −π/3) … +3 VU (full right +π/3)
@@ -51,6 +51,7 @@ private:
     // ── Helpers ───────────────────────────────────────────────────────────
     juce::Rectangle<float> getLimitBtnBounds()    const noexcept;
     juce::Rectangle<float> getCompressBtnBounds() const noexcept;
+    juce::Rectangle<float> getPowerBtnBounds()    const noexcept;
     int getCurrentMode() const noexcept;  // 0=compress, 1=limit
 
     // ── Members ───────────────────────────────────────────────────────────
@@ -66,34 +67,45 @@ private:
     float needleAngle    = 0.f;
     float needleVelocity = 0.f;
 
+    // Power toggle state
+    mutable bool powerOn = true;
+
     // ── Layout constants ──────────────────────────────────────────────────
-    static constexpr int PLUGIN_W = 800;
+    static constexpr int PLUGIN_W = 880;
     static constexpr int PLUGIN_H = 240;
     static constexpr int EAR_W    = 28;
 
-    static constexpr int SW_X = 14,  SW_W = 62, SW_H = 24;
-    static constexpr int SW_LIMIT_Y   = 65;
-    static constexpr int SW_COMPRESS_Y = 93;
+    // LIMIT/COMPRESS toggle – positioned near the bottom-left
+    static constexpr int SW_X = 38,  SW_W = 78, SW_H = 24;
+    static constexpr int SW_LIMIT_Y    = 148;
+    static constexpr int SW_COMPRESS_Y = 188;
 
-    static constexpr int GAIN_X = 88,  GAIN_Y = 45, GAIN_W = 140, GAIN_H = 140;
+    static constexpr int GAIN_X = 190, GAIN_Y = 65, GAIN_W = 105, GAIN_H = 105;
 
-    // VU meter face
-    static constexpr int   VM_X = 278, VM_Y = 18, VM_W = 220, VM_H = 165;
+    // VU meter face – centred in the wider plugin
+    static constexpr int   VM_X = 330, VM_Y = 18, VM_W = 220, VM_H = 165;
     // Inner opening of the window bezel (inset ~18px each side at plugin scale)
     static constexpr int   VM_INSET = 18;
     static constexpr float VM_PX = VM_X + VM_W * 0.5f;
-    // Pivot sits at the inner bottom edge of the window so the needle emerges from inside
-    static constexpr float VM_PY = VM_Y + VM_H - VM_INSET;
+    // Pivot sits 16px higher than the inner bezel bottom so needle emerges from within the face
+    static constexpr float VM_PY = VM_Y + VM_H - VM_INSET - 16.f;
 
     // Radii sized to fit within the inner opening (inner half-width ~92px)
+    // Arc baseline at SCALE_R_IN; ticks extend outward to SCALE_R_OUT; labels beyond that.
     static constexpr float NEEDLE_R    = 100.f;
-    static constexpr float SCALE_R_OUT =  92.f;
-    static constexpr float SCALE_R_IN  =  80.f;
-    static constexpr float LABEL_R     =  67.f;
+    static constexpr float SCALE_R_IN  =  68.f;   // arc baseline
+    static constexpr float SCALE_R_OUT =  80.f;   // outer tick tip (ticks go outward = up)
+    static constexpr float LABEL_R     =  90.f;   // labels outside arc, near clip boundary
 
-    static constexpr int PR_X = 548,  PR_Y = 45, PR_W = 140, PR_H = 140;
+    static constexpr int PR_X = 585,  PR_Y = 65, PR_W = 105, PR_H = 105;
 
-    static constexpr int BOT_Y = 200;
+    // Power toggle – near the bottom-right
+    static constexpr int PWR_CX = 775;   // centre x
+    static constexpr int PWR_CY = 190;   // centre y
+
+    // Power LED – top-right corner of the silver panel area
+    static constexpr int LED_CX = PLUGIN_W - EAR_W - 14;
+    static constexpr int LED_CY = 14;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CouchLA2AEditor)
 };
